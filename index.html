@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quizlet Topic to JSON Formatter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background: #f5f5f5;
+      line-height: 1.6;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    textarea.formatted {
+      width: 100%;
+      height: 400px;
+      padding: 10px;
+      font-size: 14px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Quizlet Topic to JSON Q/A Formatter</h1>
+
+  <label for="topicUrl">Paste Quizlet Topic URL:</label>
+  <input type="text" id="topicUrl" placeholder="https://quizlet.com/1065912616/wgu-d431-flash-cards/" />
+
+  <button onclick="openApiUrl()">Open Modified JSON URL (1000 items)</button>
+
+  <label for="rawInput">Paste Raw JSON Response:</label>
+  <textarea id="rawInput" placeholder="Paste raw JSON here..."></textarea>
+
+  <button onclick="convert()">Convert JSON to Q/A Format</button>
+
+  <label for="output">Formatted Output:</label>
+  <textarea id="output" class="formatted" placeholder="Formatted output will appear here..."></textarea>
+
+  <button onclick="storeAndProceed()">Next: Open Flashcards</button>
+
+  <script>
+    function openApiUrl() {
+      const input = document.getElementById("topicUrl").value.trim();
+      const match = input.match(/quizlet\.com\/(\d+)\//);
+
+      if (!match) {
+        alert("Invalid topic URL.");
+        return;
+      }
+
+      const topicId = match[1];
+      const apiUrl = `https://quizlet.com/webapi/3.4/studiable-item-documents?filters[studiableContainerId]=${topicId}&filters[studiableContainerType]=1&perPage=1000&page=1`;
+
+      window.open(apiUrl, '_blank');
+    }
+
+    function convert() {
+      const rawText = document.getElementById('rawInput').value;
+      const outputBox = document.getElementById('output');
+      outputBox.value = '';
+
+      let parsed;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch (err) {
+        outputBox.value = "Invalid JSON: " + err.message;
+        return;
+      }
+
+      const items = parsed?.responses?.[0]?.models?.studiableItem;
+
+      if (!items || typeof items !== 'object') {
+        outputBox.value = "Could not find 'studiableItem' data.";
+        return;
+      }
+
+      const results = [];
+
+      for (const key in items) {
+        const item = items[key];
+        const sides = item.cardSides;
+        if (!sides || sides.length < 2) continue;
+
+        const word = sides[0]?.media?.[0]?.plainText ?? '';
+        const definition = sides[1]?.media?.[0]?.plainText ?? '';
+
+        if (word && definition) {
+          results.push({ q: word, a: definition });
+        }
+      }
+
+      outputBox.value = JSON.stringify(results, null, 2);
+    }
+
+    function storeAndProceed() {
+      const outputText = document.getElementById('output').value.trim();
+      if (!outputText) {
+        alert("No formatted JSON to store. Please convert first.");
+        return;
+      }
+      try {
+        JSON.parse(outputText); // validate JSON
+      } catch (err) {
+        alert("Formatted output is not valid JSON.");
+        return;
+      }
+      localStorage.setItem("flashcard_data", outputText);
+      window.open("flashcards.html", "_blank");
+    }
+  </script>
+</body>
+</html>
