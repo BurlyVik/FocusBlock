@@ -270,11 +270,15 @@ function submitAnswer() {
   const opts = document.querySelectorAll('.option');
 
   opts.forEach(o => {
-    const optText = o.innerText.trim();
-    if (optText === correct) o.classList.add('correct');
-    if (optText === selected && selected !== correct) o.classList.add('wrong');
-    o.onclick = null;
-  });
+  const optText = o.innerText.trim();
+  if (optText === correct) {
+    o.classList.add('correct');
+  } else {
+    // mark everything else as wrong
+    o.classList.add('wrong');
+  }
+  o.onclick = null;
+});
 
   if (selected === correct) {
     document.getElementById('feedback').innerText = 'Correct!';
