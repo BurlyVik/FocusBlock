@@ -1,143 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>QuizLet FlashCard Plus</title>
-  <style>
-    html, body { height: 100%; }
-    body {
-      min-height: 100vh;
-      margin: 0;
-      background: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      font-family: Arial, sans-serif;
-    }
-    #main-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-width: 900px;
-      margin-top: 30px;
-    }
-    #qCount {
-      font-size: 22px;
-      margin-bottom: 12px;
-      text-align: center;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
+<meta charset="UTF-8">
+<title>Quizlet-Style Flashcards</title>
+<style>
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f6f7fb;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+  }
+  h1 {
+    font-size: 1.6rem;
+    margin-bottom: 1.2rem;
+    font-weight: 600;
+    color: #333;
+  }
+  #qCount {
+    margin-bottom: 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+  }
+
+  /* Card + options container */
+  .flashcard-container {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 960px;
+    flex-wrap: wrap;
+  }
+  .flashcard {
+    flex: 1 1 50%;
+    max-width: 500px;
+    min-height: 320px;
+    perspective: 1200px;
+  }
+  .card {
+    width: 100%;
+    height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    cursor: pointer;
+    background: #fff;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .side {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.5;
+    backface-visibility: hidden; /* 🔑 */
+    overflow-y: auto;
+    word-wrap: break-word;
+  }
+  .front {
+    transform: rotateY(0deg);
+    background: #fff;
+    backface-visibility: hidden;
+  }
+  .back {
+    transform: rotateY(180deg);
+    background: #fafafa;
+    backface-visibility: hidden;
+  }
+
+  /* Options to the right */
+  .options {
+    flex: 1 1 40%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .option {
+    padding: 0.9rem 1rem;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 1rem;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    word-break: break-word;
+    white-space: normal;
+  }
+  .option:hover {
+    border-color: #999;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .option.selected { border: 2px solid #555; background: #eef0ff; }
+  .option.correct { border: 2px solid #2e7d32; background: #c8e6c9; }
+  .option.wrong { border: 2px solid #c62828; background: #ffcdd2; }
+
+  /* Controls */
+  .controls-row {
+    margin-top: 1.2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+  button {
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: #1976d2;
+    color: #fff;
+    transition: background 0.2s ease;
+  }
+  button:hover { background: #1259a9; }
+  .bookmark-btn {
+    font-size: 1.3rem;
+    background: transparent;
+    color: #666;
+    padding: 0.3rem 0.6rem;
+  }
+  .bookmark-btn.bookmarked { color: #f4b400; }
+  #showBookmarkedBtn.show-bookmarked {
+    background: #ffc107;
+    color: #333;
+  }
+
+  #feedback {
+    margin-top: 0.8rem;
+    min-height: 24px;
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+
+  @media (max-width: 800px) {
     .flashcard-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 36px;
-      margin-bottom: 16px;
-      min-height: 280px;
-    }
-    .flashcard {
-      width: 420px;
-      height: 230px;
-      perspective: 1000px;
-      margin: 0;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .card {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.6s;
-      cursor: pointer;
-      border-radius: 14px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
-      background: white;
-    }
-    .card.flipped { transform: rotateY(180deg); }
-    .side {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      box-sizing: border-box;
-      border-radius: 14px;
-      background: white;
-      font-size: 14px;
-      text-align: center;
-      overflow-y: auto;
-      word-wrap: break-word;
-      line-height: 1.4;
-    }
-    .back { transform: rotateY(180deg); }
-    .options {
-      display: flex;
       flex-direction: column;
-      justify-content: center;
-      min-width: 310px;
-      height: 230px;
-      gap: 16px;
     }
-    .option {
-      background: #fff;
-      border: 1.5px solid #bdbdbd;
-      border-radius: 8px;
-      padding: 16px 16px;
-      font-size: 17px;
-      transition: box-shadow .2s;
-      cursor: pointer;
-      min-height: 35px;
-      display: flex;
-      align-items: center;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    .flashcard, .options {
+      flex: 1 1 100%;
+      max-width: 100%;
     }
-    .option.selected { border: 2px solid #333; background: #e3e3fa; }
-    .correct { background: #c8e6c9 !important; border-color: #66bb6a !important; }
-    .wrong { background: #ffcdd2 !important; border-color: #e57373 !important; }
-    .bookmark-btn {
-      background: transparent;
-      font-size: 24px;
-      padding: 5px 10px;
-      border: none;
-      vertical-align: middle;
-      cursor: pointer;
-      transition: color .18s;
-    }
-    .bookmark-btn.bookmarked { color: #FFD700; }
-    .show-bookmarked { background: #ffc107; color: #333; font-weight: bold; }
-    .controls-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 16px 0 0 0;
-    }
-    #feedback {
-      font-size: 18px;
-      margin-top: 10px;
-      min-height: 32px;
-      text-align: center;
-    }
-    @media (max-width: 900px) {
-      .flashcard-container { flex-direction: column; gap: 12px; }
-      .options { min-width: 200px; width: 95vw; }
-      .flashcard { width: 98vw; min-width: 220px; max-width: 98vw; }
-    }
-  </style>
+  }
+
+  .card-hint {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #474747;
+  text-align: center;
+}
+</style>
 </head>
 <body>
-<div id="main-wrap">
-  <h1>QuizLet FlashCard Plus</h1>
+  <h1 id="flashTitle"><a id="flashLink" href="#" target="_blank">Quizlet-Style Flashcards</a></h1>
   <div id="qCount">Loading...</div>
   <div class="flashcard-container">
     <div class="flashcard" onclick="flipCard(event)">
@@ -145,21 +181,23 @@
         <div class="side front" id="question">Loading...</div>
         <div class="side back" id="answer">Loading...</div>
       </div>
+      <div class="card-hint">Click card to reveal answer</div>
     </div>
     <div class="options" id="options"></div>
   </div>
+  
+  
+
   <div class="controls-row">
-    <button class="bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Bookmark this card">&#9734;</button>
-    <button onclick="prevCard()">Previous</button>
-    <button onclick="nextCard()">Next</button>
-    <button onclick="toggleShowBookmarked()" id="showBookmarkedBtn">Show Bookmarked</button>
+    <button class="bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Bookmark">&#9734;</button>
+    <button onclick="prevCard()">< Prev</button>
+    <button onclick="nextCard()">Next ></button>
+    <button onclick="submitAnswer()" id="submitBtn">Submit</button>
+    <button onclick="showMissedQuestions()">Missed</button>
+    <button onclick="toggleShowBookmarked()" id="showBookmarkedBtn">Bookmarked</button>
   </div>
-  <div class="controls-row">
-    <button onclick="submitAnswer()" id="submitBtn">Submit Answer</button>
-    <button onclick="showMissedQuestions()">Show Missed Questions</button>
-  </div>
+
   <div id="feedback"></div>
-</div>
 
 <script>
 let cards = [];
@@ -172,19 +210,19 @@ let bookmarks = JSON.parse(localStorage.getItem('bookmarkedQuestions') || "[]");
 let showOnlyBookmarked = false;
 let bookmarkedOrder = [];
 
-// Initialize from localStorage
+// Load flashcards from localStorage
 (function initFromLocalStorage() {
   try {
     const raw = localStorage.getItem("flashcard_data");
     if (!raw) {
-      document.getElementById("question").innerText = "No flashcards found in localStorage.";
+      document.getElementById("question").innerText = "No flashcards found.";
       document.getElementById("answer").innerText = "";
       document.getElementById("qCount").innerText = "No questions";
       return;
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      document.getElementById("question").innerText = "No flashcards found in localStorage.";
+      document.getElementById("question").innerText = "No flashcards found.";
       document.getElementById("answer").innerText = "";
       document.getElementById("qCount").innerText = "No questions";
       return;
@@ -195,7 +233,7 @@ let bookmarkedOrder = [];
     current = arr.length > 0 ? arr[0] : 0;
     showCard(current);
   } catch (e) {
-    document.getElementById("question").innerText = "Failed to read flashcards from localStorage.";
+    document.getElementById("question").innerText = "Failed to load flashcards.";
     document.getElementById("answer").innerText = "";
     document.getElementById("qCount").innerText = "No questions";
     console.error(e);
@@ -265,28 +303,23 @@ function selectOption(div, ans, correct) {
 function submitAnswer() {
   if (answered || selected === null) return;
   answered = true;
-
   const correct = cards[current].a.trim();
   const opts = document.querySelectorAll('.option');
-
   opts.forEach(o => {
-  const optText = o.innerText.trim();
-  if (optText === correct) {
-    o.classList.add('correct');
-  } else {
-    // mark everything else as wrong
-    o.classList.add('wrong');
-  }
-  o.onclick = null;
-});
-
+    const optText = o.innerText.trim();
+    if (optText === correct) o.classList.add('correct');
+    else o.classList.add('wrong');
+    o.onclick = null;
+  });
   if (selected === correct) {
     document.getElementById('feedback').innerText = 'Correct!';
   } else {
     document.getElementById('feedback').innerText = 'Incorrect.';
-    missedQuestions.push(cards[current]);
+    // ✅ Prevent duplicate entries
+    if (!missedQuestions.some(q => q.q === cards[current].q && q.a === cards[current].a)) {
+      missedQuestions.push(cards[current]);
+    }
   }
-
   document.getElementById('submitBtn').disabled = true;
 }
 
@@ -357,7 +390,6 @@ function updateCountDisplay() {
 function showMissedQuestions() {
   const existing = document.getElementById("missedContainer");
   if (existing) existing.remove();
-
   const missedDiv = document.createElement("div");
   missedDiv.id = "missedContainer";
   missedDiv.innerHTML = '<h2>Missed Questions:</h2>';
@@ -370,6 +402,13 @@ function showMissedQuestions() {
   }
   document.body.appendChild(missedDiv);
 }
+
+// Set header link and title
+const sourceUrl = localStorage.getItem("flashcard_source_url") || "#";
+const topicTitle = localStorage.getItem("flashcard_topic_title") || "Quizlet-Style Flashcards";
+const linkElem = document.getElementById("flashLink");
+linkElem.href = sourceUrl;
+linkElem.textContent = topicTitle;
 </script>
 </body>
 </html>
