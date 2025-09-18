@@ -13,6 +13,7 @@
       display: flex;
       flex-direction: row;
       gap: 20px;
+      transition: background 0.3s, color 0.3s;
     }
     .main {
       flex: 1;
@@ -26,7 +27,34 @@
       max-height: 90vh;
       overflow-y: auto;
       white-space: nowrap;
+      transition: background 0.3s, color 0.3s;
     }
+
+    /* Header row for title + toggle */
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .header-row h1 {
+      margin: 0;
+    }
+    .header-row .dark-toggle {
+  display: inline-flex;
+  align-items: center;   /* force vertical centering */
+  gap: 8px;
+  font-weight: bold;
+  white-space: nowrap;
+  line-height: 1;        /* normalize text vertical spacing */
+}
+
+.header-row .dark-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle; /* keep the box centered */
+}
+
     input, textarea {
       width: 100%;
       padding: 10px;
@@ -93,6 +121,35 @@
       cursor: pointer;
       box-sizing: border-box;
     }
+
+    /* Dark Mode */
+    body.dark {
+      background: #1e1e1e;
+      color: #e0e0e0;
+    }
+    body.dark .history {
+      background: #2a2a2a;
+      border-left: 2px solid #444;
+    }
+    body.dark input,
+    body.dark textarea {
+      background: #333;
+      color: #f5f5f5;
+      border: 1px solid #555;
+    }
+    body.dark button {
+      background: #444;
+      color: #eee;
+    }
+    body.dark .history a {
+      color: #66aaff;
+    }
+
+    body.dark .clear-btn {
+  background: #f44336;
+  color: white;
+}
+
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -117,7 +174,13 @@
 </head>
 <body>
   <div class="main">
-    <h1>Quizlet Topic to JSON Q/A Formatter</h1>
+    <div class="header-row">
+      <h1>Quizlet Topic to JSON Q/A Formatter</h1>
+      <div class="dark-toggle">
+        <input type="checkbox" id="darkModeToggle">
+        <span>Dark Mode</span>
+      </div>
+    </div>
 
     <label for="searchQuery">Search Quizlet Flash Cards:</label>
     <input type="text" id="searchQuery" placeholder="Enter search term (e.g. CompTIA A+)" />
@@ -152,6 +215,24 @@
   </div>
 
   <script>
+    // --- Dark Mode ---
+    const darkToggle = document.getElementById("darkModeToggle");
+    const darkPref = localStorage.getItem("darkModeEnabled") === "true";
+    if (darkPref) {
+      document.body.classList.add("dark");
+      darkToggle.checked = true;
+    }
+    darkToggle.addEventListener("change", () => {
+      if (darkToggle.checked) {
+        document.body.classList.add("dark");
+        localStorage.setItem("darkModeEnabled", "true");
+      } else {
+        document.body.classList.remove("dark");
+        localStorage.setItem("darkModeEnabled", "false");
+      }
+    });
+
+    // --- Search Quizlet ---
     function searchQuizlet() {
       const query = document.getElementById("searchQuery").value.trim();
       if (!query) {
@@ -252,7 +333,6 @@
     // --- History handling ---
     function saveHistoryEntry(url, raw) {
       let history = JSON.parse(localStorage.getItem("quizlet_url_history") || "[]");
-      // store as { url, raw }
       if (!history.some(h => h.url === url)) {
         history.unshift({ url, raw });
         if (history.length > 20) history.pop();
