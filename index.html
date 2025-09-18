@@ -16,16 +16,16 @@
     }
     .main {
       flex: 1;
-      min-width: 0; /* prevent overflow */
+      min-width: 0;
     }
     .history {
-      flex: 0 auto; /* shrink to fit content */
+      flex: 0 auto;
       background: #fff;
       padding: 15px;
       border-left: 2px solid #ccc;
       max-height: 90vh;
       overflow-y: auto;
-      white-space: nowrap; /* prevent titles from wrapping on desktop */
+      white-space: nowrap;
     }
     input, textarea {
       width: 100%;
@@ -36,17 +36,16 @@
       box-sizing: border-box;
     }
     textarea {
-      height: 200px;
+      height: 100px;
     }
     textarea.formatted {
-      height: 400px;
+      height: 300px;
     }
     button {
       padding: 10px 20px;
       font-size: 16px;
       margin-bottom: 20px;
       cursor: pointer;
-      width: 100%; /* full width on mobile */
       box-sizing: border-box;
     }
     label {
@@ -92,11 +91,8 @@
       border: none;
       margin-bottom: 15px;
       cursor: pointer;
-      width: 100%;
       box-sizing: border-box;
     }
-
-    /* --- Responsive --- */
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -106,11 +102,15 @@
         border-top: 2px solid #ccc;
         margin-top: 20px;
         width: 100%;
-        white-space: normal; /* allow wrapping on small screens */
+        white-space: normal;
       }
       button {
         font-size: 14px;
         padding: 8px 14px;
+        width: 100%;
+      }
+      .clear-btn {
+        width: 100%;
       }
     }
   </style>
@@ -119,7 +119,6 @@
   <div class="main">
     <h1>Quizlet Topic to JSON Q/A Formatter</h1>
 
-    <!-- NEW Search input -->
     <label for="searchQuery">Search Quizlet Flash Cards:</label>
     <input type="text" id="searchQuery" placeholder="Enter search term (e.g. CompTIA A+)" />
     <button onclick="searchQuizlet()">Search Quizlet</button>
@@ -153,7 +152,6 @@
   </div>
 
   <script>
-    // --- Search Quizlet ---
     function searchQuizlet() {
       const query = document.getElementById("searchQuery").value.trim();
       if (!query) {
@@ -167,18 +165,13 @@
     function openApiUrl() {
       const input = document.getElementById("topicUrl").value.trim();
       const match = input.match(/quizlet\.com\/(\d+)\//);
-
       if (!match) {
         alert("Invalid topic URL.");
         return;
       }
-
       const topicId = match[1];
       const apiUrl = `https://quizlet.com/webapi/3.4/studiable-item-documents?filters[studiableContainerId]=${topicId}&filters[studiableContainerType]=1&perPage=1000&page=1`;
-
       window.open(apiUrl, '_blank');
-
-      saveUrlToHistory(input);
     }
 
     function shuffleArray(arr) {
@@ -191,6 +184,7 @@
 
     function convert() {
       const rawText = document.getElementById('rawInput').value;
+      const topicUrl = document.getElementById('topicUrl').value.trim();
       const outputBox = document.getElementById('output');
       outputBox.value = '';
 
@@ -203,55 +197,46 @@
       }
 
       const items = parsed?.responses?.[0]?.models?.studiableItem;
-
       if (!items || typeof items !== 'object') {
         outputBox.value = "Could not find 'studiableItem' data.";
         return;
       }
 
       const results = [];
-
       for (const key in items) {
         const item = items[key];
         const sides = item.cardSides;
         if (!sides || sides.length < 2) continue;
-
         const word = sides[0]?.media?.[0]?.plainText ?? '';
         const definition = sides[1]?.media?.[0]?.plainText ?? '';
-
-        if (word && definition) {
-          results.push({ q: word, a: definition });
-        }
+        if (word && definition) results.push({ q: word, a: definition });
       }
 
       const orderChoice = document.querySelector('input[name="order"]:checked').value;
-      if (orderChoice === "shuffle") {
-        shuffleArray(results);
-      }
+      if (orderChoice === "shuffle") shuffleArray(results);
 
       outputBox.value = JSON.stringify(results, null, 2);
+
+      // ✅ Save URL + raw JSON into history
+      if (topicUrl && rawText) {
+        saveHistoryEntry(topicUrl, rawText);
+      }
     }
 
     function storeAndProceed() {
       const outputText = document.getElementById('output').value.trim();
       const topicUrl = document.getElementById('topicUrl').value.trim();
-        
       if (!outputText) {
         alert("No formatted JSON to store. Please convert first.");
         return;
       }
-      try {
-        JSON.parse(outputText);
-      } catch (err) {
+      try { JSON.parse(outputText); } catch (err) {
         alert("Formatted output is not valid JSON.");
         return;
       }
-    
       localStorage.setItem("flashcard_data", outputText);
-    
       if (topicUrl) {
         localStorage.setItem("flashcard_source_url", topicUrl);
-      
         const match = topicUrl.match(/quizlet\.com\/\d+\/([^/]+)/);
         if (match && match[1]) {
           const rawTitle = match[1].replace(/-/g, " ");
@@ -261,17 +246,16 @@
           localStorage.setItem("flashcard_topic_title", "Quizlet-Style Flashcards");
         }
       }
-    
-      window.open("flashcards.html", "_blank");
+      window.open("flash.html","_self");
     }
 
     // --- History handling ---
-    function saveUrlToHistory(url) {
-      if (!url) return;
+    function saveHistoryEntry(url, raw) {
       let history = JSON.parse(localStorage.getItem("quizlet_url_history") || "[]");
-      if (!history.includes(url)) {
-        history.unshift(url); // add to top
-        if (history.length > 20) history.pop(); // keep last 20
+      // store as { url, raw }
+      if (!history.some(h => h.url === url)) {
+        history.unshift({ url, raw });
+        if (history.length > 20) history.pop();
         localStorage.setItem("quizlet_url_history", JSON.stringify(history));
       }
       renderHistory();
@@ -281,16 +265,14 @@
       const history = JSON.parse(localStorage.getItem("quizlet_url_history") || "[]");
       const list = document.getElementById("historyList");
       list.innerHTML = "";
-      history.forEach(url => {
+      history.forEach(entry => {
         const li = document.createElement("li");
         const a = document.createElement("a");
 
-        // Extract topic title slug (after numeric ID)
-        const match = url.match(/quizlet\.com\/\d+\/([^/]+)/);
-        let title = url;
+        const match = entry.url.match(/quizlet\.com\/\d+\/([^/]+)/);
+        let title = entry.url;
         if (match && match[1]) {
           title = match[1].replace(/-/g, " ");
-          // Capitalize nicely
           title = title.replace(/\b\w/g, c => c.toUpperCase());
         }
 
@@ -298,7 +280,8 @@
         a.href = "#";
         a.onclick = (e) => {
           e.preventDefault();
-          document.getElementById("topicUrl").value = url;
+          document.getElementById("topicUrl").value = entry.url;
+          document.getElementById("rawInput").value = entry.raw;
         };
 
         li.appendChild(a);
@@ -311,7 +294,6 @@
       renderHistory();
     }
 
-    // Load history on startup
     renderHistory();
   </script>
 </body>
