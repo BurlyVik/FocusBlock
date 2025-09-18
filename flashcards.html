@@ -14,6 +14,7 @@
     flex-direction: column;
     align-items: center;
     padding: 2rem;
+    transition: background 0.3s, color 0.3s;
   }
   h1 {
     font-size: 1.6rem;
@@ -22,6 +23,7 @@
     color: #333;
     text-align: center;
   }
+
   #qCount {
     margin-bottom: 1.2rem;
     font-size: 1rem;
@@ -29,7 +31,15 @@
     color: #666;
     text-align: center;
   }
+  .wheel-tip {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #555;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
 
+  /* Flashcard + options container */
   .flashcard-container {
     display: flex;
     align-items: stretch;
@@ -76,6 +86,8 @@
   }
   .front { background: #fff; }
   .back { transform: rotateY(180deg); background: #fafafa; }
+
+  /* Options */
   .options {
     flex: 1 1 40%;
     max-width: 400px;
@@ -101,9 +113,17 @@
     border-color: #999;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   }
-  .option.selected { border: 2px solid #555; background: #eef0ff; }
-  .option.correct { border: 2px solid #2e7d32; background: #c8e6c9; }
-  .option.wrong { border: 2px solid #e67e22; background: #ffe0b3; }
+  /* Base option states */
+.option.selected { border: 2px solid #555; background: #eef0ff; }
+.option.correct { border: 2px solid #2e7d32; background: #c8e6c9; }
+.option.wrong   { border: 2px solid #c62828; background: #ffb74d; }
+
+/* Dark mode overrides */
+body.dark .option.selected { border: 2px solid #aaa; background: #444; }
+body.dark .option.correct  { background: #388e3c; color: #fff; }
+body.dark .option.wrong    { background: #ffb74d; color: #222; }
+
+  /* Controls */
   .controls-row {
     margin-top: 1.2rem;
     display: flex;
@@ -134,6 +154,12 @@
     background: #ffc107;
     color: #333;
   }
+  .danger-btn {
+    background: #f44336;
+    color: white;
+  }
+  .danger-btn:hover { background: #d32f2f; }
+
   #feedback {
     margin-top: 0.8rem;
     min-height: 24px;
@@ -148,34 +174,236 @@
     color: #474747;
     text-align: center;
   }
-  .hint-note {
-    margin-top: 0.6rem;
-    font-size: 0.9rem;
-    font-style: italic;
-    color: #555;
-    text-align: center;
-  }
   .back-btn {
     position: fixed;
     top: 10px;
     right: 10px;
-    background: #0066cc;
-    color: white;
-    border: none;
     padding: 8px 14px;
     font-size: 0.9rem;
     font-weight: bold;
-    cursor: pointer;
     border-radius: 4px;
     z-index: 1000;
   }
-  .back-btn:hover { background: #004999; }
+
+
+  /* Dark mode */
+  body.dark { background: #1e1e1e; color: #e0e0e0; }
+  body.dark .card { background: #2a2a2a; color: #eee; }
+  body.dark .front { background: #2a2a2a; }
+  body.dark .back { background: #333; }
+  body.dark .option { background: #2a2a2a; border: 1px solid #555; color: #eee; }
+  body.dark .option.correct { background: #388e3c; }
+  body.dark .option.wrong   { background: #ffb74d; color: #222; }
+  body.dark .option.selected { border: 2px solid #aaa; background: #444; }
+  body.dark button { background: #555; color: #eee; }
+  body.dark button:hover { background: #666; }
+
+  /* Mobile */
+  @media (max-width: 800px) {
+    body { padding: 1rem; }
+    .flashcard-container { flex-direction: column; }
+    .flashcard, .options { flex: 1 1 100%; max-width: 100%; }
+    .flashcard { margin-bottom: 1rem; }
+    button { width: 100%; }
+    .back-btn { font-size: 0.8rem; padding: 6px 10px; }
+  }
+
+  .top-bar {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+/* Top toolbar */
+.top-bar {
+  position: absolute; /* not fixed so it doesn’t overlap the centered title */
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.top-bar button {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+/* Export button (green) */
+.export-btn {
+  background: #4CAF50;
+  color: white;
+}
+.export-btn:hover { background: #388E3C; }
+body.dark .export-btn { background: #4CAF50; color: white; }
+
+/* Back button (red) */
+.danger-btn {
+  background: #f44336;
+  color: white;
+}
+.danger-btn:hover { background: #d32f2f; }
+body.dark .danger-btn { background: #f44336; }
+
+/* Mobile: stack neatly */
+@media (max-width: 600px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-end; /* keep them right aligned */
+  }
+  .top-bar button {
+    width: auto; /* don’t stretch full width */
+  }
+}
+
+/* Header container */
+.header {
+  display: flex;
+  justify-content: flex-end;  /* push buttons to the right */
+  align-items: center;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Buttons side by side */
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Question count centered beneath */
+#qCount {
+  margin-top: 0.5rem;
+  margin-bottom: 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  text-align: center;
+}
+
+/* Back button (red) */
+.danger-btn {
+  background: #f44336;
+  color: white;
+}
+.danger-btn:hover { background: #d32f2f; }
+body.dark .danger-btn { background: #f44336; }
+
+/* General dark button rule */
+body.dark button {
+  background: #555;
+  color: #eee;
+}
+body.dark button:hover {
+  background: #666;
+}
+
+/* ✅ Submit button override (must come after the above block) */
+body.dark #submitBtn {
+  background: #8e44ad !important;  /* force purple */
+  color: #fff !important;
+}
+body.dark #submitBtn:hover {
+  background: #732d91 !important;
+}
+
+@media (max-width: 800px) {
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  /* Reorder for mobile: Prev (1), Submit (2), Next (3) */
+  #prevBtn   { order: 1; flex: 1 1 auto; }
+  #submitBtn { order: 2; flex: 1 1 auto; }
+  #nextBtn   { order: 3; flex: 1 1 auto; }
+
+  /* Keep other buttons after them */
+  #bookmarkBtn        { order: 4; }
+  #missedBtn          { order: 5; }
+  #showBookmarkedBtn  { order: 6; }
+
+  /* Make them full width if you want them stacked neatly */
+  .controls-row button {
+    width: 100%;
+  }
+}
+
+/* Mobile controls row layout */
+@media (max-width: 800px) {
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  /* Prev – Submit – Next aligned side by side */
+  #prevBtn, #submitBtn, #nextBtn {
+    flex: 1 1 30%;
+    min-width: 80px;
+  }
+
+  /* Keep other buttons full width beneath */
+  #bookmarkBtn,
+  #missedBtn,
+  #showBookmarkedBtn {
+    flex: 1 1 100%;
+  }
+}
+
+/* Default light mode button colors for navigation */
+#prevBtn {
+  background: #9e9e9e; /* neutral gray */
+  color: #fff;
+}
+#nextBtn {
+  background: #2196f3; /* light blue */
+  color: #fff;
+}
+
+/* Dark mode overrides */
+body.dark #prevBtn {
+  background: #555;   /* softer dark gray */
+  color: #eee;
+}
+body.dark #prevBtn:hover {
+  background: #666;
+}
+body.dark #nextBtn {
+  background: #1565c0; /* deeper muted blue */
+  color: #eee;
+}
+body.dark #nextBtn:hover {
+  background: #1976d2;
+}
+
 </style>
 </head>
+
 <body>
-  <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
-  <h1 id="flashTitle"><a id="flashLink" href="#" target="_blank">Quizlet-Style Flashcards</a></h1>
+  <div class="header">
+  <div class="header-buttons">
+    <button class="danger-btn" onclick="window.location.href='index.html'">Back</button>
+    <button class="export-btn" onclick="exportCSV()">Export</button>
+  </div>
+</div>
+
   <div id="qCount">Loading...</div>
+  <div class="wheel-tip">Use your mouse scroll wheel to cycle through questions faster</div>
+
   <div class="flashcard-container">
     <div class="flashcard" onclick="flipCard(event)">
       <div class="card" id="card">
@@ -186,54 +414,57 @@
     </div>
     <div class="options" id="options"></div>
   </div>
+
   <div class="controls-row">
     <button class="bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Bookmark">&#9734;</button>
-    <button onclick="prevCard()">< Prev</button>
-    <button onclick="nextCard()">Next ></button>
+    <button onclick="prevCard()" id="prevBtn">Prev</button>
+    <button onclick="nextCard()" id="nextBtn">Next</button>
     <button onclick="submitAnswer()" id="submitBtn">Submit</button>
-    <button onclick="showMissedQuestions()">Missed</button>
+    <button onclick="showMissedQuestions()" id="missedBtn">Missed</button>
     <button onclick="toggleShowBookmarked()" id="showBookmarkedBtn">Bookmarked</button>
   </div>
-  <div class="hint-note">Tip: Use your mouse scroll wheel to cycle through questions quicker</div>
+
+
   <div id="feedback"></div>
 
 <script>
 let cards = [];
 let current = 0;
+let selected = null;
 let answered = false;
 let missedQuestions = [];
 let bookmarks = JSON.parse(localStorage.getItem('bookmarkedQuestions') || "[]");
 let showOnlyBookmarked = false;
 let bookmarkedOrder = [];
-// Save per-card state: { correct: true/false, chosen: "text", answers: [array in fixed order] }
-let answerStates = {};
+let answerStates = {}; // store answers + options set
 
+// Dark mode carry over
+if (localStorage.getItem("darkModeEnabled") === "true") {
+  document.body.classList.add("dark");
+}
+
+// Load cards
 (function initFromLocalStorage() {
-  const raw = localStorage.getItem("flashcard_data");
-  if (!raw) return showNoCards("No flashcards found.");
   try {
+    const raw = localStorage.getItem("flashcard_data");
+    if (!raw) return;
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return showNoCards("No flashcards found.");
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
     cards = parsed;
     updateBookmarkedOrder();
-    current = 0;
+    const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
+    current = arr.length > 0 ? arr[0] : 0;
     showCard(current);
-  } catch { showNoCards("Failed to load flashcards."); }
+  } catch (e) { console.error(e); }
 })();
-
-function showNoCards(msg) {
-  document.getElementById("question").innerText = msg;
-  document.getElementById("answer").innerText = "";
-  document.getElementById("qCount").innerText = "No questions";
-  document.getElementById("options").innerHTML = "";
-}
 
 function showCard(index) {
   document.getElementById('card').classList.remove('flipped');
   document.getElementById('question').innerText = cards[index].q;
   document.getElementById('answer').innerText = cards[index].a;
-  answered = !!answerStates[index]?.hasOwnProperty("correct");
-  document.getElementById('feedback').innerText = '';
+  selected = null;
+  answered = !!(answerStates[index] && answerStates[index].answered);
+  document.getElementById('feedback').innerText = answered ? answerStates[index].feedback : '';
   document.getElementById('submitBtn').disabled = answered;
   showOptions(index);
   updateBookmarkStar();
@@ -246,103 +477,113 @@ function flipCard(e) {
 }
 
 function nextCard() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
   if (arr.length === 0) return;
-  current = arr[(arr.indexOf(current) + 1) % arr.length];
+  let idx = arr.indexOf(current);
+  idx = (idx + 1) % arr.length;
+  current = arr[idx];
   showCard(current);
 }
 function prevCard() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
   if (arr.length === 0) return;
-  current = arr[(arr.indexOf(current) - 1 + arr.length) % arr.length];
+  let idx = arr.indexOf(current);
+  idx = (idx - 1 + arr.length) % arr.length;
+  current = arr[idx];
   showCard(current);
 }
-let wheelTimeout;
-window.addEventListener("wheel", (e) => {
-  e.preventDefault();
-  clearTimeout(wheelTimeout);
-  wheelTimeout = setTimeout(() => {
-    if (e.deltaY > 0) nextCard();
-    else if (e.deltaY < 0) prevCard();
-  }, 100);
-}, { passive: false });
 
+// Show options with consistent answers
 function showOptions(index) {
   const optionsDiv = document.getElementById('options');
   optionsDiv.innerHTML = '';
-  const correct = cards[index].a;
 
-  // Use stored answers if they exist, otherwise generate & save
-  let answers;
-  if (answerStates[index]?.answers) {
-    answers = answerStates[index].answers;
+  let optsSet;
+  if (answerStates[index]?.options) {
+    optsSet = answerStates[index].options; // reuse stored set
   } else {
+    const correct = cards[index].a;
     let wrongs = cards.filter((c, i) => i !== index).map(c => c.a);
     wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 2);
-    answers = [correct, ...wrongs].sort(() => 0.5 - Math.random());
+    optsSet = [correct, ...wrongs].sort(() => 0.5 - Math.random());
     if (!answerStates[index]) answerStates[index] = {};
-    answerStates[index].answers = answers;
+    answerStates[index].options = optsSet;
+    answerStates[index].correct = correct;
   }
 
-  answers.forEach(ans => {
+  optsSet.forEach(ans => {
     const div = document.createElement('div');
     div.className = 'option';
     div.innerText = ans;
-    div.onclick = () => selectOption(div, ans, correct);
-    optionsDiv.appendChild(div);
 
-    // Restore state
-    if (answerStates[index]?.chosen) {
-      if (answerStates[index].hasOwnProperty("correct")) {
-        if (ans === correct) div.classList.add("correct");
-        if (!answerStates[index].correct && ans === answerStates[index].chosen) {
-          div.classList.add("wrong");
-        }
-      } else {
-        if (ans === answerStates[index].chosen) {
-          div.classList.add("selected"); // ✅ restore gray if not yet submitted
-        }
-      }
+    const state = answerStates[index];
+    if (state) {
+      if (ans === state.correct && state.answered) div.classList.add('correct');
+      if (state.selected === ans && state.selected !== state.correct) div.classList.add('wrong');
+      if (!state.answered && state.selected === ans) div.classList.add('selected');
     }
+
+    div.onclick = () => selectOption(div, ans, answerStates[index].correct);
+    optionsDiv.appendChild(div);
   });
 }
 
-function selectOption(div, ans) {
+function selectOption(div, ans, correct) {
   if (answered) return;
   document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
-  div.classList.add('selected');   // ✅ gray highlight on click
-  if (!answerStates[current]) answerStates[current] = {};
-  answerStates[current].chosen = ans;
+  div.classList.add('selected');
+  selected = ans;
+  // ❌ Do NOT save to answerStates here, only after submission
 }
 
+
 function submitAnswer() {
-  if (answered || !answerStates[current]?.chosen) return;
+  if (answered || selected === null) return;
   answered = true;
   const correct = cards[current].a.trim();
-  const chosen = answerStates[current].chosen;
+
   document.querySelectorAll('.option').forEach(o => {
     const optText = o.innerText.trim();
-    if (optText === correct) o.classList.add('correct');
-    if (optText === chosen && optText !== correct) o.classList.add('wrong');
+    o.classList.remove('selected'); // clear highlight before grading
+
+    if (optText === correct) {
+      o.classList.add('correct');
+    } else if (optText === selected) {
+      o.classList.add('wrong');
+    }
+
     o.onclick = null;
   });
-  if (chosen === correct) {
-    document.getElementById('feedback').innerText = 'Correct!';
-    answerStates[current].correct = true;
-  } else {
-    document.getElementById('feedback').innerText = 'Incorrect.';
-    answerStates[current].correct = false;
-    if (!missedQuestions.some(q => q.q === cards[current].q && q.a === cards[current].a)) {
-      missedQuestions.push(cards[current]);
-    }
-  }
+
+  const feedback = (selected === correct) ? 'Correct!' : 'Incorrect.';
+  document.getElementById('feedback').innerText = feedback;
   document.getElementById('submitBtn').disabled = true;
+
+  if (!answerStates[current]) answerStates[current] = {};
+  Object.assign(answerStates[current], {
+    selected,
+    correct,
+    answered: true,
+    feedback
+  });
+
+  if (selected !== correct && !missedQuestions.some(q => q.q === cards[current].q)) {
+    missedQuestions.push(cards[current]);
+  }
 }
+
+
+
 
 function updateBookmarkStar() {
   const btn = document.getElementById('bookmarkBtn');
-  btn.innerHTML = bookmarks.includes(current) ? '&#9733;' : '&#9734;';
-  btn.classList.toggle('bookmarked', bookmarks.includes(current));
+  if (bookmarks.includes(current)) {
+    btn.innerHTML = '&#9733;';
+    btn.classList.add('bookmarked');
+  } else {
+    btn.innerHTML = '&#9734;';
+    btn.classList.remove('bookmarked');
+  }
 }
 function toggleBookmark() {
   const idx = bookmarks.indexOf(current);
@@ -354,41 +595,72 @@ function toggleBookmark() {
 }
 function updateBookmarkedOrder() {
   bookmarkedOrder = bookmarks.slice();
-  if (showOnlyBookmarked && !bookmarkedOrder.includes(current)) {
-    if (bookmarkedOrder.length > 0) {
-      current = bookmarkedOrder[0];
-      showCard(current);
-    } else showNoCards("No bookmarked cards.");
-  }
 }
 function toggleShowBookmarked() {
   showOnlyBookmarked = !showOnlyBookmarked;
   document.getElementById('showBookmarkedBtn').classList.toggle('show-bookmarked', showOnlyBookmarked);
   updateBookmarkedOrder();
-  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
   if (arr.length > 0) {
-    current = arr.includes(current) ? current : arr[0];
+    current = arr[0];
     showCard(current);
-  } else showNoCards("No bookmarked cards.");
+  }
 }
 function updateCountDisplay() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
-  document.getElementById('qCount').innerText = arr.length
-    ? `Question ${arr.indexOf(current)+1} of ${arr.length}`
-    : 'No questions';
+  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
+  const countElem = document.getElementById('qCount');
+  if (arr.length === 0) countElem.innerText = 'No questions';
+  else countElem.innerText = "Question " + (arr.indexOf(current)+1) + " of " + arr.length;
 }
 function showMissedQuestions() {
-  document.getElementById("missedContainer")?.remove();
+  const existing = document.getElementById("missedContainer");
+  if (existing) existing.remove();
   const missedDiv = document.createElement("div");
   missedDiv.id = "missedContainer";
   missedDiv.innerHTML = '<h2>Missed Questions:</h2>';
-  missedQuestions.length
-    ? missedQuestions.forEach((q,i)=>{missedDiv.innerHTML+=`<p><strong>Q${i+1}:</strong> ${q.q}<br><strong>A:</strong> ${q.a}</p>`;})
-    : missedDiv.innerHTML += '<p>None! Great job!</p>';
+  if (missedQuestions.length === 0) {
+    missedDiv.innerHTML += '<p>None! Great job!</p>';
+  } else {
+    missedQuestions.forEach((q, i) => {
+      missedDiv.innerHTML += `<p><strong>Q${i+1}:</strong> ${q.q}<br><strong>A:</strong> ${q.a}</p>`;
+    });
+  }
   document.body.appendChild(missedDiv);
 }
-document.getElementById("flashLink").href = localStorage.getItem("flashcard_source_url") || "#";
-document.getElementById("flashLink").textContent = localStorage.getItem("flashcard_topic_title") || "Quizlet-Style Flashcards";
+
+// Scroll wheel navigation
+document.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0) nextCard();
+  else if (e.deltaY < 0) prevCard();
+});
+
+// Set header link/title
+const sourceUrl = localStorage.getItem("flashcard_source_url") || "#";
+const topicTitle = localStorage.getItem("flashcard_topic_title") || "Quizlet-Style Flashcards";
+
+
+function exportCSV() {
+  let rows = [["Type","Question","Answer"]];
+
+  // Export bookmarked
+  bookmarks.forEach(idx => {
+    rows.push(["Bookmarked", cards[idx].q, cards[idx].a]);
+  });
+
+  // Export missed
+  missedQuestions.forEach(q => {
+    rows.push(["Missed", q.q, q.a]);
+  });
+
+  let csvContent = rows.map(r => r.map(v => `"${(v+"").replace(/"/g,'""')}"`).join(",")).join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "flashcards_export.csv";
+  link.click();
+}
+
 </script>
 </body>
 </html>
