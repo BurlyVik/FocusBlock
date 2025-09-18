@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Quizlet-Style Flashcards</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body {
     margin: 0;
@@ -19,15 +20,16 @@
     margin-bottom: 1.2rem;
     font-weight: 600;
     color: #333;
+    text-align: center;
   }
   #qCount {
     margin-bottom: 1.2rem;
     font-size: 1rem;
     font-weight: 500;
     color: #666;
+    text-align: center;
   }
 
-  /* Card + options container */
   .flashcard-container {
     display: flex;
     align-items: stretch;
@@ -56,7 +58,6 @@
     background: #fff;
   }
   .card.flipped { transform: rotateY(180deg); }
-
   .side {
     position: absolute;
     inset: 0;
@@ -69,22 +70,12 @@
     font-size: 1.05rem;
     font-weight: 500;
     line-height: 1.5;
-    backface-visibility: hidden; /* 🔑 */
+    backface-visibility: hidden;
     overflow-y: auto;
     word-wrap: break-word;
   }
-  .front {
-    transform: rotateY(0deg);
-    background: #fff;
-    backface-visibility: hidden;
-  }
-  .back {
-    transform: rotateY(180deg);
-    background: #fafafa;
-    backface-visibility: hidden;
-  }
-
-  /* Options to the right */
+  .front { background: #fff; }
+  .back { transform: rotateY(180deg); background: #fafafa; }
   .options {
     flex: 1 1 40%;
     max-width: 400px;
@@ -112,9 +103,7 @@
   }
   .option.selected { border: 2px solid #555; background: #eef0ff; }
   .option.correct { border: 2px solid #2e7d32; background: #c8e6c9; }
-  .option.wrong { border: 2px solid #c62828; background: #ffcdd2; }
-
-  /* Controls */
+  .option.wrong { border: 2px solid #e67e22; background: #ffe0b3; }
   .controls-row {
     margin-top: 1.2rem;
     display: flex;
@@ -145,34 +134,46 @@
     background: #ffc107;
     color: #333;
   }
-
   #feedback {
     margin-top: 0.8rem;
     min-height: 24px;
     font-size: 1.05rem;
     font-weight: 500;
+    text-align: center;
   }
-
-  @media (max-width: 800px) {
-    .flashcard-container {
-      flex-direction: column;
-    }
-    .flashcard, .options {
-      flex: 1 1 100%;
-      max-width: 100%;
-    }
-  }
-
   .card-hint {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-style: italic;
-  color: #474747;
-  text-align: center;
-}
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #474747;
+    text-align: center;
+  }
+  .hint-note {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #555;
+    text-align: center;
+  }
+  .back-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    z-index: 1000;
+  }
+  .back-btn:hover { background: #004999; }
 </style>
 </head>
 <body>
+  <button class="back-btn" onclick="window.location.href='index.html'">← Back</button>
   <h1 id="flashTitle"><a id="flashLink" href="#" target="_blank">Quizlet-Style Flashcards</a></h1>
   <div id="qCount">Loading...</div>
   <div class="flashcard-container">
@@ -185,9 +186,6 @@
     </div>
     <div class="options" id="options"></div>
   </div>
-  
-  
-
   <div class="controls-row">
     <button class="bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()" title="Bookmark">&#9734;</button>
     <button onclick="prevCard()">< Prev</button>
@@ -196,58 +194,47 @@
     <button onclick="showMissedQuestions()">Missed</button>
     <button onclick="toggleShowBookmarked()" id="showBookmarkedBtn">Bookmarked</button>
   </div>
-
+  <div class="hint-note">Tip: Use your mouse scroll wheel to cycle through questions quicker</div>
   <div id="feedback"></div>
 
 <script>
 let cards = [];
 let current = 0;
-let selected = null;
 let answered = false;
 let missedQuestions = [];
-
 let bookmarks = JSON.parse(localStorage.getItem('bookmarkedQuestions') || "[]");
 let showOnlyBookmarked = false;
 let bookmarkedOrder = [];
+// Save per-card state: { correct: true/false, chosen: "text", answers: [array in fixed order] }
+let answerStates = {};
 
-// Load flashcards from localStorage
 (function initFromLocalStorage() {
+  const raw = localStorage.getItem("flashcard_data");
+  if (!raw) return showNoCards("No flashcards found.");
   try {
-    const raw = localStorage.getItem("flashcard_data");
-    if (!raw) {
-      document.getElementById("question").innerText = "No flashcards found.";
-      document.getElementById("answer").innerText = "";
-      document.getElementById("qCount").innerText = "No questions";
-      return;
-    }
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      document.getElementById("question").innerText = "No flashcards found.";
-      document.getElementById("answer").innerText = "";
-      document.getElementById("qCount").innerText = "No questions";
-      return;
-    }
+    if (!Array.isArray(parsed) || parsed.length === 0) return showNoCards("No flashcards found.");
     cards = parsed;
     updateBookmarkedOrder();
-    const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
-    current = arr.length > 0 ? arr[0] : 0;
+    current = 0;
     showCard(current);
-  } catch (e) {
-    document.getElementById("question").innerText = "Failed to load flashcards.";
-    document.getElementById("answer").innerText = "";
-    document.getElementById("qCount").innerText = "No questions";
-    console.error(e);
-  }
+  } catch { showNoCards("Failed to load flashcards."); }
 })();
+
+function showNoCards(msg) {
+  document.getElementById("question").innerText = msg;
+  document.getElementById("answer").innerText = "";
+  document.getElementById("qCount").innerText = "No questions";
+  document.getElementById("options").innerHTML = "";
+}
 
 function showCard(index) {
   document.getElementById('card').classList.remove('flipped');
   document.getElementById('question').innerText = cards[index].q;
   document.getElementById('answer').innerText = cards[index].a;
-  selected = null;
-  answered = false;
+  answered = !!answerStates[index]?.hasOwnProperty("correct");
   document.getElementById('feedback').innerText = '';
-  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').disabled = answered;
   showOptions(index);
   updateBookmarkStar();
   updateCountDisplay();
@@ -259,63 +246,92 @@ function flipCard(e) {
 }
 
 function nextCard() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
   if (arr.length === 0) return;
-  let idx = arr.indexOf(current);
-  idx = (idx + 1) % arr.length;
-  current = arr[idx];
+  current = arr[(arr.indexOf(current) + 1) % arr.length];
   showCard(current);
 }
-
 function prevCard() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
   if (arr.length === 0) return;
-  let idx = arr.indexOf(current);
-  idx = (idx - 1 + arr.length) % arr.length;
-  current = arr[idx];
+  current = arr[(arr.indexOf(current) - 1 + arr.length) % arr.length];
   showCard(current);
 }
+let wheelTimeout;
+window.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  clearTimeout(wheelTimeout);
+  wheelTimeout = setTimeout(() => {
+    if (e.deltaY > 0) nextCard();
+    else if (e.deltaY < 0) prevCard();
+  }, 100);
+}, { passive: false });
 
 function showOptions(index) {
   const optionsDiv = document.getElementById('options');
   optionsDiv.innerHTML = '';
   const correct = cards[index].a;
-  let wrongs = cards.filter((c, i) => i !== index).map(c => c.a);
-  wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 2);
-  const answers = [correct, ...wrongs].sort(() => 0.5 - Math.random());
+
+  // Use stored answers if they exist, otherwise generate & save
+  let answers;
+  if (answerStates[index]?.answers) {
+    answers = answerStates[index].answers;
+  } else {
+    let wrongs = cards.filter((c, i) => i !== index).map(c => c.a);
+    wrongs = wrongs.sort(() => 0.5 - Math.random()).slice(0, 2);
+    answers = [correct, ...wrongs].sort(() => 0.5 - Math.random());
+    if (!answerStates[index]) answerStates[index] = {};
+    answerStates[index].answers = answers;
+  }
+
   answers.forEach(ans => {
     const div = document.createElement('div');
     div.className = 'option';
     div.innerText = ans;
     div.onclick = () => selectOption(div, ans, correct);
     optionsDiv.appendChild(div);
+
+    // Restore state
+    if (answerStates[index]?.chosen) {
+      if (answerStates[index].hasOwnProperty("correct")) {
+        if (ans === correct) div.classList.add("correct");
+        if (!answerStates[index].correct && ans === answerStates[index].chosen) {
+          div.classList.add("wrong");
+        }
+      } else {
+        if (ans === answerStates[index].chosen) {
+          div.classList.add("selected"); // ✅ restore gray if not yet submitted
+        }
+      }
+    }
   });
 }
 
-function selectOption(div, ans, correct) {
+function selectOption(div, ans) {
   if (answered) return;
-  const opts = document.querySelectorAll('.option');
-  opts.forEach(o => o.classList.remove('selected'));
-  div.classList.add('selected');
-  selected = ans;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  div.classList.add('selected');   // ✅ gray highlight on click
+  if (!answerStates[current]) answerStates[current] = {};
+  answerStates[current].chosen = ans;
 }
 
 function submitAnswer() {
-  if (answered || selected === null) return;
+  if (answered || !answerStates[current]?.chosen) return;
   answered = true;
   const correct = cards[current].a.trim();
-  const opts = document.querySelectorAll('.option');
-  opts.forEach(o => {
+  const chosen = answerStates[current].chosen;
+  document.querySelectorAll('.option').forEach(o => {
     const optText = o.innerText.trim();
     if (optText === correct) o.classList.add('correct');
-    else o.classList.add('wrong');
+    if (optText === chosen && optText !== correct) o.classList.add('wrong');
     o.onclick = null;
   });
-  if (selected === correct) {
+  if (chosen === correct) {
     document.getElementById('feedback').innerText = 'Correct!';
+    answerStates[current].correct = true;
   } else {
     document.getElementById('feedback').innerText = 'Incorrect.';
-    // ✅ Prevent duplicate entries
+    answerStates[current].correct = false;
     if (!missedQuestions.some(q => q.q === cards[current].q && q.a === cards[current].a)) {
       missedQuestions.push(cards[current]);
     }
@@ -325,15 +341,9 @@ function submitAnswer() {
 
 function updateBookmarkStar() {
   const btn = document.getElementById('bookmarkBtn');
-  if (bookmarks.includes(current)) {
-    btn.innerHTML = '&#9733;';
-    btn.classList.add('bookmarked');
-  } else {
-    btn.innerHTML = '&#9734;';
-    btn.classList.remove('bookmarked');
-  }
+  btn.innerHTML = bookmarks.includes(current) ? '&#9733;' : '&#9734;';
+  btn.classList.toggle('bookmarked', bookmarks.includes(current));
 }
-
 function toggleBookmark() {
   const idx = bookmarks.indexOf(current);
   if (idx === -1) bookmarks.push(current);
@@ -342,73 +352,43 @@ function toggleBookmark() {
   updateBookmarkStar();
   updateBookmarkedOrder();
 }
-
 function updateBookmarkedOrder() {
   bookmarkedOrder = bookmarks.slice();
   if (showOnlyBookmarked && !bookmarkedOrder.includes(current)) {
     if (bookmarkedOrder.length > 0) {
       current = bookmarkedOrder[0];
       showCard(current);
-    } else {
-      document.getElementById('question').innerText = 'No bookmarked cards.';
-      document.getElementById('answer').innerText = '';
-      document.getElementById('options').innerHTML = '';
-      document.getElementById('feedback').innerText = '';
-      updateCountDisplay();
-    }
+    } else showNoCards("No bookmarked cards.");
   }
 }
-
 function toggleShowBookmarked() {
   showOnlyBookmarked = !showOnlyBookmarked;
   document.getElementById('showBookmarkedBtn').classList.toggle('show-bookmarked', showOnlyBookmarked);
   updateBookmarkedOrder();
-  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
+  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
   if (arr.length > 0) {
-    current = arr[0];
+    current = arr.includes(current) ? current : arr[0];
     showCard(current);
-  } else {
-    document.getElementById('question').innerText = 'No bookmarked cards.';
-    document.getElementById('answer').innerText = '';
-    document.getElementById('options').innerHTML = '';
-    document.getElementById('feedback').innerText = '';
-    updateCountDisplay();
-  }
+  } else showNoCards("No bookmarked cards.");
 }
-
 function updateCountDisplay() {
-  const arr = showOnlyBookmarked ? bookmarkedOrder : Array.from({ length: cards.length }, (_, i) => i);
-  const countElem = document.getElementById('qCount');
-  if (arr.length === 0) {
-    countElem.innerText = 'No questions';
-  } else {
-    const position = arr.indexOf(current) + 1;
-    countElem.innerText = "Question " + position + " of " + arr.length;
-  }
+  const arr = showOnlyBookmarked ? bookmarkedOrder : cards.map((_, i) => i);
+  document.getElementById('qCount').innerText = arr.length
+    ? `Question ${arr.indexOf(current)+1} of ${arr.length}`
+    : 'No questions';
 }
-
 function showMissedQuestions() {
-  const existing = document.getElementById("missedContainer");
-  if (existing) existing.remove();
+  document.getElementById("missedContainer")?.remove();
   const missedDiv = document.createElement("div");
   missedDiv.id = "missedContainer";
   missedDiv.innerHTML = '<h2>Missed Questions:</h2>';
-  if (missedQuestions.length === 0) {
-    missedDiv.innerHTML += '<p>None! Great job!</p>';
-  } else {
-    missedQuestions.forEach((q, i) => {
-      missedDiv.innerHTML += `<p><strong>Q${i+1}:</strong> ${q.q}<br><strong>A:</strong> ${q.a}</p>`;
-    });
-  }
+  missedQuestions.length
+    ? missedQuestions.forEach((q,i)=>{missedDiv.innerHTML+=`<p><strong>Q${i+1}:</strong> ${q.q}<br><strong>A:</strong> ${q.a}</p>`;})
+    : missedDiv.innerHTML += '<p>None! Great job!</p>';
   document.body.appendChild(missedDiv);
 }
-
-// Set header link and title
-const sourceUrl = localStorage.getItem("flashcard_source_url") || "#";
-const topicTitle = localStorage.getItem("flashcard_topic_title") || "Quizlet-Style Flashcards";
-const linkElem = document.getElementById("flashLink");
-linkElem.href = sourceUrl;
-linkElem.textContent = topicTitle;
+document.getElementById("flashLink").href = localStorage.getItem("flashcard_source_url") || "#";
+document.getElementById("flashLink").textContent = localStorage.getItem("flashcard_topic_title") || "Quizlet-Style Flashcards";
 </script>
 </body>
 </html>
