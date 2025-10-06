@@ -1,5 +1,3 @@
----
-
 # FocusBlock
 
 **Turn Quizlet sets into focused study blocks.**
