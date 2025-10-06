@@ -1,33 +1,29 @@
-Perfect — if you plan to host **FocusBlock** with GitHub Pages, you’ll want a **Demo** section in your README with direct links to the live app.
-
-Here’s the updated `README.md` formatted for GitHub, with a **Demo section** added:
-
 ---
 
-# FocusBlock 🔖
+# FocusBlock
 
 **Turn Quizlet sets into focused study blocks.**
 FocusBlock is a lightweight web app that converts Quizlet JSON into interactive flashcards for active recall and study.
 
 ---
 
-## ✨ Features
+## Features
 
-* 🔗 **Quizlet Integration** — paste a Quizlet set URL and fetch its JSON.
-* 📝 **Q/A Formatter** — convert raw Quizlet JSON into clean Q/A pairs.
-* 📚 **History Tracking** — remembers your past URLs + raw JSON for quick reuse.
-* 🔄 **Flashcard Viewer** — flip cards, cycle with mouse scroll, or use navigation buttons.
-* ✅ **Answer Retention** — correct answers stay **green**, wrong answers stay **orange**, even when you revisit.
-* ⭐ **Bookmarks** — mark important cards and filter to just the bookmarked ones.
-* 📱 **Mobile Friendly** — responsive design for studying anywhere.
+* **Quizlet Integration** — paste a Quizlet set URL and fetch its JSON.
+* **Q/A Formatter** — convert raw Quizlet JSON into clean Q/A pairs.
+* **History Tracking** — remembers your past URLs + raw JSON for quick reuse.
+* **Flashcard Viewer** — flip cards, cycle with mouse scroll, or use navigation buttons.
+* **Answer Retention** — correct answers stay **green**, wrong answers stay **orange**, even when you revisit.
+* **Bookmarks** — mark important cards and filter to just the bookmarked ones.
+* **Mobile Friendly** — responsive design for studying anywhere.
 
 ---
 
-## 🌐 Demo
+## Demo
 
 You can try FocusBlock live here (hosted with GitHub Pages):
 
-👉 [**Live Demo – FocusBlock**](https://your-username.github.io/focusblock/)
+[**Live Demo – FocusBlock**](https://your-username.github.io/focusblock/)
 
 * [**Index Page**](https://your-username.github.io/focusblock/index.html) (paste Quizlet URL, convert JSON, and open flashcards)
 * [**Flashcards Page**](https://your-username.github.io/focusblock/flashcards.html) (interactive study session)
@@ -36,7 +32,7 @@ You can try FocusBlock live here (hosted with GitHub Pages):
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repo
 
@@ -62,15 +58,17 @@ then visit [http://localhost:8080](http://localhost:8080).
 
 ---
 
-## 📷 Screenshots
+## Screenshots
 
 *(Add screenshots of Index + Flashcard screens here.)*
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **HTML5**
 * **Vanilla JavaScript**
 * **LocalStorage** (history & bookmarks)
 * **Responsive CSS**
+
+---
